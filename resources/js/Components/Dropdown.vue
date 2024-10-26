@@ -16,21 +16,42 @@ const props = defineProps({
     },
 });
 
+const open = ref(false); // Open state for the dropdown
+
+// Function to close dropdown on escape key
 const closeOnEscape = (e) => {
     if (open.value && e.key === 'Escape') {
         open.value = false;
     }
 };
 
-onMounted(() => document.addEventListener('keydown', closeOnEscape));
-onUnmounted(() => document.removeEventListener('keydown', closeOnEscape));
+// Function to close dropdown on clicking outside
+const closeOnClickOutside = (e) => {
+    if (open.value && !e.target.closest('.dropdown-container')) {
+        open.value = false;
+    }
+};
 
+// Mount event listeners for closing on escape key and outside click
+onMounted(() => {
+    document.addEventListener('keydown', closeOnEscape);
+    document.addEventListener('click', closeOnClickOutside);
+});
+
+// Clean up event listeners when component is unmounted
+onUnmounted(() => {
+    document.removeEventListener('keydown', closeOnEscape);
+    document.removeEventListener('click', closeOnClickOutside);
+});
+
+// Computed class for width
 const widthClass = computed(() => {
     return {
         48: 'w-48',
     }[props.width.toString()];
 });
 
+// Computed class for alignment
 const alignmentClasses = computed(() => {
     if (props.align === 'left') {
         return 'ltr:origin-top-left rtl:origin-top-right start-0';
@@ -40,23 +61,22 @@ const alignmentClasses = computed(() => {
         return 'origin-top';
     }
 });
-
-const open = ref(false);
 </script>
 
 <template>
-    <div class="relative">
+    <div class="relative dropdown-container">
         <div @click="open = !open">
             <slot name="trigger" />
         </div>
 
-        <!-- Full Screen Dropdown Overlay -->
+        <!-- Full-Screen Overlay -->
         <div
             v-show="open"
-            class="flex inset-0 z-40"
+            class="fixed inset-0 z-40"
             @click="open = false"
         ></div>
 
+        <!-- Dropdown Content with Transition -->
         <Transition
             enter-active-class="transition ease-out duration-200"
             enter-from-class="opacity-0 scale-95"
@@ -69,7 +89,7 @@ const open = ref(false);
                 v-show="open"
                 class="absolute z-50 mt-2 rounded-md shadow-lg"
                 :class="[widthClass, alignmentClasses]"
-                @click="open = false"
+                @click.stop
             >
                 <div
                     class="rounded-md ring-1 ring-black ring-opacity-5"
