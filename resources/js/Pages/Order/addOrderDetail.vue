@@ -1,7 +1,122 @@
 <script setup>
 import appLayout from '@/Layouts/appLayout.vue'
 import { Link, Head } from '@inertiajs/vue3'
+import { ref, watch, computed } from 'vue'
+import { useForm } from '@inertiajs/vue3';
+import ActionMessage from '@/Components/ActionMessage.vue';
+const query = ref(null);
+const results = ref([]);
+const GoodsName = ref('');
+const GoodsCost = ref('');
+const showResults = ref(false);
+const Amount = ref(null);
+const showMessage = ref(false);
+const successMessage = ref('');
 
+const tot_prc = computed(() => {
+    const amountValue = Number(Amount.value) || 0;
+    const costUnitValue = Number(GoodsCost.value) || 0;
+    return amountValue * costUnitValue;
+});
+
+
+
+const props = defineProps({ order: Object,orderDetails: Object });
+const searchGoods = async () => {
+    try {
+        const response = await axios.get(route('order.goods.search'), {
+            params: { query: query.value },
+        });
+        results.value = response.data;
+    } catch (error) {
+        console.error('Error fetching members:', error);
+    }
+};
+
+watch(query, () => {
+    if (query.value) {
+        searchGoods();
+        showResults.value = true;
+    } else {
+        results.value = [];
+        showResults.value = false;
+    }
+});
+
+watch(tot_prc, (newValue) => {
+    form.tot_prc = newValue; // Keep form.tot_prc updated
+});
+const select = (result) => {
+    GoodsName.value = result.goods_name;
+    GoodsCost.value = result.cost_unit;
+    query.value = result.goods_id;
+    results.value = [];
+    showResults.value = false;
+};
+
+
+const showResultsOnFocus = () => {
+    if (!query.value) {
+        searchGoods();
+    }
+    showResults.value = true;
+};
+
+const hideResultsOnBlur = () => {
+    setTimeout(() => {
+        showResults.value = false;
+    }, 100);
+};
+
+const form = useForm({
+    Order_no: '',
+    goods_id: '',
+    Ord_date: '',
+    Fin_date: '',
+    amount: '',
+    cost_unit: '',
+    tot_prc: ''
+});
+const cus_id = props.order?.cus_id || '';
+const Order_no = props.order?.Order_no || '';
+
+const submitOrderDetail = () => {
+
+    form.Order_no = Order_no;
+    form.goods_id = query.value;
+    form.Ord_date = document.getElementById('datepicker-1').value;
+    form.Fin_date = document.getElementById('datepicker-2').value;
+    form.amount = Amount.value;
+    form.cost_unit = GoodsCost.value;
+    form.tot_prc = tot_prc.value;
+    form.post(route('order.create.detail.store', { cus_id, Order_no }), {
+        onSuccess: () => {
+            successMessage.value = 'Order Detail added successfully!';
+            showMessage.value = true;
+            Amount.value = '';
+            GoodsCost.value = '';
+            GoodsName.value = '';
+            query.value = '';
+            form.reset(); // Resets all fields in the form data
+
+            // Clear the date fields if necessary
+            document.getElementById('datepicker-1').value = '';
+            document.getElementById('datepicker-2').value = '';
+
+            handleSubmit();
+
+        },
+        onError: (errors) => {
+            console.error('Error submitting form:', errors);
+        }
+    });
+};
+
+const handleSubmit = () => {
+    setTimeout(() => {
+        showMessage.value = false;
+    }, 2000);
+};
 </script>
 <template>
     <appLayout>
@@ -16,8 +131,10 @@ import { Link, Head } from '@inertiajs/vue3'
                                 การบันทึก/แก้ไข การสั่งซื้อสินค้า
                             </h2>
                         </div>
-                        <form>
+
+                        <form @submit.prevent="submitOrderDetail">
                             <div class="mt-8">
+
                                 <div class="ml-12">
                                     <div class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                                         สถานะ เพิ่มรายการส่วน Header การรับคำสั่งซื้อสินค้า
@@ -26,95 +143,158 @@ import { Link, Head } from '@inertiajs/vue3'
                                         <div class="mb-6">
                                             เพิ่มข้อมูล Header
                                         </div>
+                                        <div>
+
+                                        </div>
                                         <div class="flex flex-row mb-6">
+
+
                                             <div class="mr-6">
-                                                <label for="cus_id"
+                                                <label
                                                     class="block mb-2 text-m font-medium text-gray-900 dark:text-white">รหัสลูกค้า
                                                 </label>
-                                                <input type="text" id="cus_id"
+                                                <input type="text" id="cus_id" v-model="order.cus_id"
                                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                                    placeholder="รหัสลูกค้า" required />
+                                                    placeholder="รหัสลูกค้า" disabled />
                                             </div>
                                             <div class="mr-6">
-                                                <label for="cus_name"
+                                                <label
                                                     class="block mb-2 text-m font-medium text-gray-900 dark:text-white">ชื่อลูกค้า</label>
-                                                <input type="text" id="last_name"
+                                                <input type="text" id="cus_name" v-model="order.customers.cus_name"
                                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                                    placeholder="ชื่อลูกค้า" required />
+                                                    placeholder="ชื่อลูกค้า" disabled />
                                             </div>
                                             <div class="mr-6">
-                                                <label for="cus_name"
+                                                <label
                                                     class="block mb-2 text-m font-medium text-gray-900 dark:text-white">วันที่สั่งสินค้า
                                                 </label>
-                                                <input type="text" id="last_name"
+                                                <input id="order-date" v-model="order.Order_date"
                                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                                    placeholder="Order No" required />
+                                                    placeholder="Order No" disabled />
                                             </div>
                                             <div class="mr-6">
-                                                <label for="order_id"
+                                                <label
                                                     class="block mb-2 text-m font-medium text-gray-900 dark:text-white">Order
                                                     No</label>
-                                                <input type="text" id="last_name"
+                                                <input type="text" id="order-no" v-model="order.Order_no"
                                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                                    placeholder="Order No" required />
+                                                    placeholder="Order No" disabled />
                                             </div>
                                         </div>
                                     </div>
+
                                 </div>
+
                                 <hr class="h-px my-12 bg-gray-200 border-0 dark:bg-gray-700" />
-                                <div class="flex flex-row mb-6 ml-12">
+
+                                <ActionMessage :on="showMessage">
+                                                <div v-if="successMessage"
+                                                    class="p-4 mt-4 mb-2 text-sm text-green-800 rounded-lg bg-green-50 dark:bg-gray-800 dark:text-green-400"
+                                                    role="alert">
+                                                    <span class="font-medium">{{ successMessage }}</span>
+                                                </div>
+                                            </ActionMessage>
+                                <div class="flex flex-row mb-6 ml-12 ">
                                     <div class="mr-6">
-                                        <label for="cus_name"
-                                            class="block mb-2 text-m font-medium text-gray-900 dark:text-white">ชื่อลูกค้า</label>
-                                        <input type="text" id="last_name"
-                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                            placeholder="ชื่อลูกค้า" required />
+                                        <label
+                                            class="block mb-2 text-m font-medium text-gray-900 dark:text-white">รหัสสินค้า</label>
+                                        <input type="text" v-model="query" @focus="showResultsOnFocus"
+                                            @blur="hideResultsOnBlur"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            placeholder="รหัสลูกค้า" required />
+                                        <div class="absolute z-50 mt-2 rounded-md dark:rounded-md hover:rounded-md shadow-lg"
+                                            v-if="showResults && results.length">
+                                            <div
+                                                class="rounded-md ring-1 ring-black ring-opacity-5 bg-white dark:bg-gray-700 ">
+
+                                                <div class="block px-4 py-2 rounded-md   dark:hover:text-white">
+                                                    <ul>
+                                                        <li v-for="result in results" :key="result.goods_id"
+                                                            @click="select(result)"
+                                                            class="cursor-pointer hover:bg-gray-400 dark:hover:bg-gray-600 dark:text-white">
+                                                            {{ result.goods_id }} {{ result.goods_name }}
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="mr-6">
-                                        <label for="cus_name"
-                                            class="block mb-2 text-m font-medium text-gray-900 dark:text-white">ชื่อลูกค้า</label>
-                                        <input type="text" id="last_name"
+                                    <div class="mr-6 w-2/3">
+                                        <label
+                                            class="block mb-2 text-m font-medium text-gray-900 dark:text-white">รายละเอียดสินค้า</label>
+                                        <input type="text" id="last_name" v-model="GoodsName"
                                             class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                            placeholder="ชื่อลูกค้า" required />
+                                            placeholder="รายละเอียดสินค้า" required />
                                     </div>
                                 </div>
                                 <div class="flex flex-row mb-6 ml-12">
                                     <div>
-                                        <label for="cus_name"
+                                        <label
                                             class="block mb-2 text-m font-medium text-gray-900 dark:text-white">วันกำหนดส่ง</label>
-                                        <input type="text" id="last_name"
-                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                            placeholder="ชื่อลูกค้า" required />
+                                        <div class="relative max-w-sm">
+                                            <div
+                                                class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
+                                                </svg>
+                                            </div>
+                                            <input datepicker id="datepicker-1" type="text"
+                                                datepicker-format="yyyy-mm-dd"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                placeholder="วันกำหนดส่ง">
+                                        </div>
+
+
                                     </div>
                                     <div class="ml-10">
-                                        <label for="cus_name"
-                                            class="block mb-2 text-m font-medium text-gray-900 dark:text-white">วันกำหนดส่ง</label>
-                                        <input type="text" id="last_name"
-                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                            placeholder="ชื่อลูกค้า" required />
+                                        <label
+                                            class="block mb-2 text-m font-medium text-gray-900 dark:text-white">วันที่ส่งสินค้าจริง</label>
+
+
+                                        <div class="relative max-w-sm">
+                                            <div
+                                                class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                                                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
+                                                </svg>
+                                            </div>
+                                            <input datepicker id="datepicker-2" type="text"
+                                                datepicker-format="yyyy-mm-dd"
+                                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                placeholder="วันที่ส่งสินค้าจริง">
+                                        </div>
+
+
                                     </div>
                                     <div class="ml-10">
-                                        <label for="cus_name"
+                                        <label
                                             class="block mb-2 text-m font-medium text-gray-900 dark:text-white">จำนวนที่สั่ง</label>
-                                        <input type="text" id="last_name"
-                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                            placeholder="ชื่อลูกค้า" required />
+                                        <input type="number" id="amount" v-model="Amount"
+                                            aria-describedby="helper-text-explanation"
+                                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                            placeholder="จำนวนที่สั่ง" required min="0" />
                                     </div>
                                 </div>
                                 <div class="flex flex-row mb-6 ml-12">
                                     <div>
-                                        <label for="cus_name"
+                                        <label
                                             class="block mb-2 text-m font-medium text-gray-900 dark:text-white">ราคา/หน่วย</label>
-                                        <input type="text" id="last_name"
+                                        <input type="text" id="cost_unit" v-model="GoodsCost"
                                             class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                            placeholder="ชื่อลูกค้า" required />
+                                            placeholder="ราคา/หน่วย" required />
                                     </div>
                                     <div class="ml-10">
-                                        <label for="cus_name"
+                                        <label
                                             class="block mb-2 text-m font-medium text-gray-900 dark:text-white">ราคารวม</label>
-                                        <input type="text" id="last_name"
+                                        <input type="text" id="tot_prc" v-model="tot_prc"
                                             class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                                            placeholder="ชื่อลูกค้า" required />
+                                            placeholder="ราคารวม" required disabled />
                                     </div>
                                 </div>
                                 <button type="submit"
@@ -124,7 +304,7 @@ import { Link, Head } from '@inertiajs/vue3'
                     </div>
                     <div class="mx-12 mt-8 ">
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-                            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+                            <table class="w-full text-m text-left rtl:text-right text-gray-500 dark:text-white">
                                 <thead
                                     class="text-base text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                                     <tr>
@@ -152,28 +332,30 @@ import { Link, Head } from '@inertiajs/vue3'
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr class="bg-white border-b dark:bg-gray-600 dark:border-gray-700">
+                                    <tr v-for="orderDetail in orderDetails" :key="orderDetail.order_detail_id"
+                                    class="bg-white border-b dark:bg-gray-600 dark:border-gray-700">
                                         <th scope="row"
                                             class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                            Apple MacBook Pro 17"
+                                            {{ orderDetail.goods.goods_id }}
                                         </th>
                                         <td class="px-6 py-4">
-                                            Silver
+                                            {{ orderDetail.goods.goods_name }}
+                                        </td>
+
+                                        <td class="px-6 py-4">
+                                            {{ orderDetail.formatted_ord_date || 'N/A'  }}
+                                        </td>
+                                        <td class="px-6 py-4 ">
+                                            {{ orderDetail.formatted_fin_date || 'N/A' }}
                                         </td>
                                         <td class="px-6 py-4">
-                                        dd/mm/yyyy
+                                            {{ orderDetail.amount }}
                                         </td>
                                         <td class="px-6 py-4">
-                                           dd/mm/yyyy
+                                            {{ orderDetail.cost_unit }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            99999
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            99999
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            99999
+                                            {{ orderDetail.tot_prc }}
                                         </td>
                                     </tr>
                                 </tbody>

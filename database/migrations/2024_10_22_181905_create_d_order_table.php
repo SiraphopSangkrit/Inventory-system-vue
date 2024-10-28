@@ -12,16 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('d_order', function (Blueprint $table) {
-            $table->bigIncrements('Order_no');
-            $table->foreign('Order_no')->references('order_no')->on('h_order');
-            $table->string('cus_id', 5);
-            $table->foreign('Cus_id')->references('cus_id')->on('cus_name');
-            $table->dateTime('Ord_date');
-            $table->dateTime('Fin_date')->nullable();
+            $table->bigIncrements('order_detail_id');
+            $table->bigInteger('Order_no')->unsigned();
+            $table->foreign('Order_no')->references('Order_no')->on('h_order');
+            $table->string('goods_id', 10);
+            $table->foreign('goods_id')->references('goods_id')->on('goods_name');
+            $table->date('Ord_date');
+            $table->date('Fin_date')->nullable();
             $table->smallInteger('amount')->default(0);
-            $table->smallInteger('cost_unit')->default(0);
-            $table->smallInteger('tot_prc')->default(0);
-
+            $table->float('cost_unit')->default(0);
+            $table->float('tot_prc')->default(0);
+            $table->timestamps();
         });
     }
 

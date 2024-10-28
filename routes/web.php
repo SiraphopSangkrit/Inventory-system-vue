@@ -13,18 +13,26 @@ Route::get('/', function () {
 })->name('dashboard');
 
 Route::get('/customer', [CustomerController::class, 'index'])->name('customer.index');
+Route::post('/customer', [CustomerController::class,'StoreCus'])->name('customer.store');
+Route::delete('/customer/{id}', [CustomerController::class,'CusDestroy'])->name('customer.destroy');
 //Goods
 Route::get('/goods', [GoodsController::class, 'index'])->name('goods.index');
+Route::post('/goods', [GoodsController::class, 'StoreGoods'])->name('goods.store');
+Route::delete('/goods/{id}', [GoodsController::class, 'GoodsDestroy'])->name('goods.destroy');
 //Order
 Route::get('/order', [OrderController::class, 'index'])->name('order.index');
-Route::get('/order/create', [OrderController::class, 'AddOrder'])->name('order.create');
-Route::get('/order/create/detail', [OrderController::class, 'AddOrderDetail'])->name('order.create.detail');
-Route::get('/order/edit/detail', [OrderController::class, 'EditOrderDetail'])->name('order.edit.detail');
-Route::get('/order/edit/detail/update', [OrderController::class, 'UpdateOrderDetail'])->name('order.update.detail');
-
+Route::get('/order/create', [OrderController::class, 'AddOrder'])->name('order.create.header');
+Route::post('/order/create', [OrderController::class, 'OrderHeaderStore'])->name('order.header.store');
+Route::get('/order/create/detail/{cus_id}/{order_id}', [OrderController::class, 'AddOrderDetail'])->name('order.create.detail');
+Route::post('/order/create/detail/', [OrderController::class, 'OrderDetailStore'])->name('order.create.detail.store');
+Route::get('/order/create/goods/search', [OrderController::class, 'GoodsSearch'])->name('order.goods.search');
+Route::get('/order/detail/customer:{cus_id}/order:{order_id}', [OrderController::class, 'OrderDetail'])->name('order.detail');
+Route::get('/order/detail/customer:{cus_id}/order:{order_id}/edit/detail:{order_detail_id}', [OrderController::class, 'EditOrderDetail'])->name('order.edit.detail');
+Route::patch('/order/detail/customer:{cus_id}/order:{order_id}/edit/detail:{order_detail_id}', [OrderController::class, 'UpdateOrderDetail'])->name('order.edit.detail.update');
+Route::get('/order/create/search', [GoodsController::class, 'CusSearch'])->name('order.create.search');
 //Process
-Route::get('/order/process', [OrderController::class,'ProcessDate'])->name('order.process');
-
+Route::get('/order/process', [OrderController::class,'ProcessDatePage'])->name('order.process.page');
+Route::post('/order/process', [OrderController::class,'ProcessDate'])->name('order.process');
 //report
 Route::get('/order/report', [OrderController::class,'OrderReport'])->name('order.report');
 

@@ -21,7 +21,7 @@ import { Link, Head } from '@inertiajs/vue3'
                                 <div class="mt-6">
                                     <div class="flex flex-row mb-6">
                                         <div class="mr-6">
-                                            <label for="cus_id"
+                                            <label
                                                 class="block mb-2 text-m font-medium text-gray-900 dark:text-white">ระหว่างวันทื่ส่งสินค้า
                                             </label>
                                             <input type="text" id="cus_id"
@@ -29,7 +29,7 @@ import { Link, Head } from '@inertiajs/vue3'
                                                 placeholder="รหัสลูกค้า" required />
                                         </div>
                                         <div class="mr-0">
-                                            <label for="order_id"
+                                            <label 
                                                 class="block mb-2 text-m font-medium text-gray-900 dark:text-white">ถึงวันที่</label>
                                             <input type="text" id="last_name"
                                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-m rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
@@ -40,7 +40,7 @@ import { Link, Head } from '@inertiajs/vue3'
                                                 class="ml-12 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-m w-full  sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">แสดง</button>
                                         </div>
                                     </div>
-                                   
+
                                 </div>
                             </div>
                         </div>

@@ -14,8 +14,8 @@ return new class extends Migration {
             $table->id('Order_no');
             $table->string('cus_id', 5);
             $table->foreign('Cus_id')->references('cus_id')->on('cus_name');
-            $table->dateTime('Order_date');
-
+            $table->date('Order_date');
+            $table->timestamps();
         });
     }
 
