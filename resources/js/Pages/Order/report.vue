@@ -102,7 +102,7 @@ const exportToExcel = () => {
         'จำนวน', 'ราคา/หน่วย', 'ราคารวม'
     ];
 
-    // Prepare the data rows, adding headers at the beginning
+
     const tableData = props.dOrders.map((order, index) => ([
         index + 1,
         `${order.h_order.customers.cus_id} : ${order.h_order.customers.cus_name}`,
@@ -185,7 +185,6 @@ const generatePDF = () => {
         }
     });
 
-    // ส่งออก PDF
     doc.save(`Order_Report_${formattedDate}.pdf`);
 };
 </script>

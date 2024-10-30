@@ -198,8 +198,8 @@ class OrderController extends Controller
     public function OrderReport(Request $request)
     {
 
-        $gdoc_1 = Carbon::parse($request->gdoc_date1)->startOfDay();
-        $gdoc_2 = Carbon::parse($request->gdoc_date2)->endOfDay();
+        $gdoc_1 = Carbon::parse($request->gdoc_date1);
+        $gdoc_2 = Carbon::parse($request->gdoc_date2);
 
 
         $dOrders = D_order::with(['goods', 'h_order.customers'])
@@ -207,6 +207,7 @@ class OrderController extends Controller
             ->whereNull('Fin_date')
             ->get();
 
+     
 
         foreach ($dOrders as $order) {
             $order->formatted_ord_date = Carbon::parse($order->Ord_date)
