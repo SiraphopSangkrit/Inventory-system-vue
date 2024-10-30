@@ -1,7 +1,7 @@
 <script setup>
 import appLayout from '@/Layouts/appLayout.vue'
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { useForm } from '@inertiajs/vue3';
 import axios from 'axios';
 
@@ -68,6 +68,10 @@ const submitOrder = () => {
         }
     });
 };
+onMounted(() => {
+    const today = new Date().toISOString().split('T')[0];
+    form.Order_date = today; 
+});
 
 </script>
 <template>
@@ -87,7 +91,7 @@ const submitOrder = () => {
                             <div class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
                                 สถานะ เพิ่มรายการส่วน Header การรับคำสั่งซื้อสินค้า
                             </div>
-                           
+
                             <div class="mt-6">
 
                                 <form @submit.prevent="submitOrder">
@@ -149,13 +153,6 @@ const submitOrder = () => {
                                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                                     placeholder="Select date">
                                             </div>
-
-
-
-
-
-
-
                                         </div>
                                     </div>
                                     <button type="submit"

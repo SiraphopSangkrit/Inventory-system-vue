@@ -1,8 +1,34 @@
 <script setup>
 import appLayout from '@/Layouts/appLayout.vue'
-import { Link, Head } from '@inertiajs/vue3'
+import { Link, Head, router } from '@inertiajs/vue3'
+import Swal from 'sweetalert2'
 
 defineProps({ orders: Object });
+
+const handleDelete = (orders) => {
+    Swal.fire({
+        title: 'ต้องการลบสิ่งนี้หรือไม่?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        cancelButtonText: 'ไม่ต้องการ',
+        confirmButtonText: 'ใช่,ฉันต้องการลบ!',
+    }).then((result) => {
+        if (result.isConfirmed) {
+
+            router.delete(route('order.delete.header', {
+                cus_id: orders.cus_id,
+                order_id: orders.Order_no,
+            }));
+            Swal.fire(
+                'Deleted!',
+                'Your file has been deleted.',
+                'success'
+            );
+        }
+    });
+};
 </script>
 <template>
     <appLayout>
@@ -38,7 +64,7 @@ defineProps({ orders: Object });
                                                 จำนวนรายการที่สั่ง
                                             </th>
                                             <th scope="col" class="px-6 py-3 text-center">
-                                                จำนวนรายการที่สั่ง
+                                                จำนวนที่สั่ง
                                             </th>
                                             <th scope="col" class="flex justify-center px-6 py-3">
                                                 Action
@@ -62,13 +88,13 @@ defineProps({ orders: Object });
                                                 {{ order.d_order_count }}
                                             </td>
                                             <td class="px-6 py-4 text-center">
-                                                {{ order.d_order_sum_amount }}
+                                                {{ order.d_order_sum_amount || 0 }}
                                             </td>
                                             <td class="flex justify-center px-6 py-4 w-full">
                                                 <Link :href="route('order.detail',{ cus_id: order.cus_id, order_id: order.Order_no })" type="button"
                                                     class="focus:outline-none text-white bg-yellow-400 hover:bg-yellow-500 focus:ring-4 focus:ring-yellow-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:focus:ring-yellow-900">
                                                 แก้ไข</Link>
-                                                <button type="button"
+                                                <button type="button" @click="handleDelete(order)"
                                                     class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">ลบ</button>
                                             </td>
                                         </tr>

@@ -3,6 +3,10 @@ import appLayout from '@/Layouts/appLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
+
+function closeTab() {
+    window.close();
+}
 </script>
 
 <template>
@@ -91,7 +95,7 @@ import DropdownLink from '@/Components/DropdownLink.vue';
                             </Dropdown>
                         </div>
                         <div>
-                            <button type="button"
+                            <button type="button"   @click="closeTab"
                                 class="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900">ออกจากระบบ</button>
                         </div>
                     </div>

@@ -37,7 +37,9 @@ const UpdateOrderDetail = () => {
         cus_id: props.orderHeader.cus_id,
         order_detail_id: props.orderDetail.order_detail_id
     }),{
-
+        onSuccess: () => {
+            Swal.fire({ title: "แก้ไขสินค้าแล้วเรียบร้อย", icon: "success", timer: 2000 });
+        }
     });
 };
 </script>

@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Http\RedirectResponse;
 use Carbon\Carbon;
+
+
 class OrderController extends Controller
 {
     public function index()
@@ -53,8 +55,19 @@ class OrderController extends Controller
 
     }
 
+
+
     public function OrderDetailStore(Request $request)
     {
+        $request->validate([
+            'goods_id' => 'required|unique:d_order|max:10'],[
+
+            'goods_id.required' => 'กรุณาใส่รหัสสินค้า.',
+            'goods_id.unique' => 'รหัสสินค้าซ้ำ กรุณาใส่รหัสสินค้าใหม่',
+            'goods_id.max' => 'ใส่รหัสสินค้าได้ไม่เกิน 10 ตัว',
+
+        ]);
+
         $goods = D_order::create([
             'Order_no' => $request->Order_no,
             'goods_id' => $request->goods_id,
@@ -167,25 +180,72 @@ class OrderController extends Controller
                 'cost_tot' => $detail->tot_prc,
             ]);
 
-        $orderHeaderId = $detail->Order_no;
-        $detail->delete();
-        $remainingDetails = D_order::where('Order_no', $orderHeaderId)->count();
-        if ($remainingDetails === 0) {
+            $orderHeaderId = $detail->Order_no;
+            $detail->delete();
+            $remainingDetails = D_order::where('Order_no', $orderHeaderId)->count();
+            if ($remainingDetails === 0) {
 
-            H_order::where('Order_no', $orderHeaderId)->delete();
+                H_order::where('Order_no', $orderHeaderId)->delete();
+            }
         }
-    }
 
 
 
         return redirect()->route('dashboard');
     }
-    public function OrderReport()
+
+
+    public function OrderReport(Request $request)
     {
-        return Inertia::render('Order/report', []);
+
+        $gdoc_1 = Carbon::parse($request->gdoc_date1)->startOfDay();
+        $gdoc_2 = Carbon::parse($request->gdoc_date2)->endOfDay();
+
+
+        $dOrders = D_order::with(['goods', 'h_order.customers'])
+            ->whereBetween('Ord_date', [$gdoc_1, $gdoc_2])
+            ->whereNull('Fin_date')
+            ->get();
+
+
+        foreach ($dOrders as $order) {
+            $order->formatted_ord_date = Carbon::parse($order->Ord_date)
+                ->locale('th')
+                ->translatedFormat('d F Y');
+            if ($order->h_order) {
+                $order->h_order->formatted_order_date = Carbon::parse($order->h_order->Order_date)
+                    ->locale('th')
+                    ->translatedFormat('d F Y');
+            }
+
+        }
+
+        return inertia('Order/report', [
+            'dOrders' => $dOrders,
+        ]);
 
     }
 
+    public function OrderHeaderDelete(Request $request)
+    {
+        $orderNoId = $request->order_id;
+
+        $orderDetail = D_order::where('Order_no',$orderNoId)->delete();
+        $orderHeader = H_order::where('Order_no', $orderNoId)->first();
+        $orderHeader->delete();
+        return redirect()->back();
+    }
+    public function DeleteOrderDetails(Request $request)
+    {
+        $orderNoId = $request->order_id;
+        $orderDetailId = $request->order_detail_id;
+
+        $orderDetail = D_order::where('order_detail_id', $orderDetailId)
+        ->where('Order_no', $orderNoId)
+        ->first();
+        $orderDetail->delete();
+        return redirect()->back();
+    }
     public function OrderHeaderStore(Request $request): RedirectResponse
     {
         $OrderHeader = H_order::create([
